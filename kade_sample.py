@@ -29,7 +29,7 @@ def handle_upload(e: events.UploadEventArguments):
     raw.set_montage(montage)
 
     raw.plot()
-#
+
 
 
 def generate_Bar_Graph(e: events.UploadEventArguments):
@@ -38,7 +38,7 @@ def generate_Bar_Graph(e: events.UploadEventArguments):
     except:
         print("ERROR IN generate_Bar_Graph")
         return
-#
+
 
 
 def generate_Topo_Map():
@@ -53,7 +53,7 @@ def generate_Topo_Map():
         print("ERROR IN generate_Topo_Map")
         return
     raw.plot_topomap()
-#
+
 
 
 def raw_plot():
@@ -63,7 +63,7 @@ def raw_plot():
     raw.set_montage(montage)
     y = raw.plot()
     print(type(y))
-#
+
 
 
 def generate_montage_plot():
@@ -73,7 +73,7 @@ def generate_montage_plot():
     raw.set_montage(montage)
     mne.viz.plot_montage(montage)
     return
-#
+
     
 
 def generate_ICA():
@@ -96,8 +96,6 @@ def generate_ICA():
 
 
 
-###File Selection
-
 def choose_local_file() -> None:
     try:
         global file 
@@ -107,20 +105,36 @@ def choose_local_file() -> None:
     except:
         print("ERROR WITH choose_local_file")
         return
-#
 
-###Header
-dark = ui.dark_mode()
-with ui.header().classes(replace='row items-center') as header:
-    ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
+
+
+#BEGINNING OF PAGE LAYOUT
+
+#Start of Header-----------------------------------------------------------------------------------------------------------------------------
+with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
+    dark = ui.dark_mode()
     with ui.tabs() as tabs:
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
-        ui.html(ui.button('Dark', on_click=dark.enable)
-        ui.button('Light', on_click=dark.disable))
-    #
-#
+with ui.left_drawer(top_corner=True, bottom_corner=True).style('background-color: #d7e3f4'):
+    ui.label('LEFT DRAWER')
+#End of Header-------------------------------------------------------------------------------------------------------------------------------
+
+#If we want something on the right side of the screen, (A right drawer, similar to the left drawer) then uncomment the 2 lines below this
+# with ui.right_drawer(fixed=False).style('background-color: #ebf1fa').props('bordered') as right_drawer:
+#     ui.label('RIGHT DRAWER')
+
+
+#Here is the start of the Footer-------------------------------------------------------------------------------------------------------------
+with ui.footer().style('background-color: #3874c8'):
+    with ui.row():
+        ui.button('Dark', on_click=dark.enable)
+        ui.button('Light', on_click=dark.disable)    
+
+#End of the Footer---------------------------------------------------------------------------------------------------------------------------
+
+#EVERYTHING AFTER THIS LINE WILL GO INSIDE OF THE MAIN VIEW
 
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('Local Files'):
@@ -191,25 +205,5 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     #
 #
 
-
-
-
-
-
-
-###Footer that is displayed when clicking sticky button
-with ui.footer(value=False) as footer:
-    ui.label('This is a Visual Interface for working with the Python MNE library')
-#
-
-
-with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
-    ui.button(on_click=footer.toggle, icon='contact_support').props('fab')
-#
-
-# dark = ui.dark_mode()
-# ui.label('Switch mode:')
-# ui.button('Dark', on_click=dark.enable)
-# ui.button('Light', on_click=dark.disable)
 
 ui.run()
