@@ -117,8 +117,13 @@ with ui.header(elevated=True).style('background-color: #3874c8').classes('items-
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
-with ui.left_drawer(top_corner=True, bottom_corner=True).style('background-color: #d7e3f4'):
-    ui.label('LEFT DRAWER')
+
+#End of Header-------------------------------------------------------------------------------------------------------------------------------
+
+      
+#CODE BELOW IS FOR A LEFT DRAWER. UNCOMMENT THESE LINES IF WE EVER WANT THE LEFT DRAWER BACK
+# with ui.left_drawer(top_corner=True, bottom_corner=True):
+#     ui.label('LEFT DRAWER')
 #End of Header-------------------------------------------------------------------------------------------------------------------------------
 
 #If we want something on the right side of the screen, (A right drawer, similar to the left drawer) then uncomment the 2 lines below this
