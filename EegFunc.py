@@ -13,13 +13,14 @@ import easygui
 ###File Selection
 
 def choose_local_file() -> None:
+    container = ui.row()
     with container:
         container.clear()
         try:
             global file 
             file = easygui.fileopenbox()
             ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20})
-            return
+            return container
         except:
             print("ERROR WITH choose_local_file")
             return
