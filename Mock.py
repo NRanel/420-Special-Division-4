@@ -26,7 +26,9 @@ EegFunc.generate_montage_plot
 
 EegFunc.generate_ICA
 
-###Header
+
+
+
 #BEGINNING OF PAGE LAYOUT
 
 #Start of Header-----------------------------------------------------------------------------------------------------------------------------
@@ -37,12 +39,6 @@ with ui.header(elevated=True).style('background-color: #3874c8').classes('items-
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
 
-#End of Header-------------------------------------------------------------------------------------------------------------------------------
-
-      
-#CODE BELOW IS FOR A LEFT DRAWER. UNCOMMENT THESE LINES IF WE EVER WANT THE LEFT DRAWER BACK
-# with ui.left_drawer(top_corner=True, bottom_corner=True):
-#     ui.label('LEFT DRAWER')
 #End of Header-------------------------------------------------------------------------------------------------------------------------------
 
 #If we want something on the right side of the screen, (A right drawer, similar to the left drawer) then uncomment the 2 lines below this
@@ -59,12 +55,15 @@ with ui.footer().style('background-color: #3874c8'):
 #End of the Footer---------------------------------------------------------------------------------------------------------------------------
 
 #EVERYTHING AFTER THIS LINE WILL GO INSIDE OF THE MAIN VIEW
+container = ui.row()
+
 
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('Local Files'):
         
                 with ui.stepper().props('vertical').classes('w-full') as stepper:
                     with ui.step('Choose File'):
+                        container
                         ui.button('Choose Local File', on_click=EegFunc.choose_local_file)
                         with ui.stepper_navigation():
                             ui.button('Next', on_click=stepper.next)
@@ -143,8 +142,6 @@ with ui.footer(value=False) as footer:
 with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
     ui.button(on_click=footer.toggle, icon='contact_support').props('fab')
 #
-
-
 
 
 ui.run()
