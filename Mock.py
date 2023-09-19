@@ -29,16 +29,32 @@ EegFunc.generate_ICA
 
 
 
-###Header
+#BEGINNING OF PAGE LAYOUT
 
-with ui.header().classes(replace='row items-center') as header:
-    ##ui.button(on_click=lambda: left_drawer.toggle(), icon='menu').props('flat color=white')
+#Start of Header-----------------------------------------------------------------------------------------------------------------------------
+with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
+    dark = ui.dark_mode()
     with ui.tabs() as tabs:
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
-    #
-#
+
+#End of Header-------------------------------------------------------------------------------------------------------------------------------
+
+#If we want something on the right side of the screen, (A right drawer, similar to the left drawer) then uncomment the 2 lines below this
+# with ui.right_drawer(fixed=False).style('background-color: #ebf1fa').props('bordered') as right_drawer:
+#     ui.label('RIGHT DRAWER')
+
+
+#Here is the start of the Footer-------------------------------------------------------------------------------------------------------------
+with ui.footer().style('background-color: #3874c8'):
+    with ui.row():
+        ui.button('Dark', on_click=dark.enable)
+        ui.button('Light', on_click=dark.disable)    
+
+#End of the Footer---------------------------------------------------------------------------------------------------------------------------
+
+#EVERYTHING AFTER THIS LINE WILL GO INSIDE OF THE MAIN VIEW
 
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('Local Files'):
@@ -124,9 +140,5 @@ with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
     ui.button(on_click=footer.toggle, icon='contact_support').props('fab')
 #
 
-dark = ui.dark_mode()
-ui.label('Switch mode:')
-ui.button('Dark', on_click=dark.enable)
-ui.button('Light', on_click=dark.disable)
 
 ui.run()
