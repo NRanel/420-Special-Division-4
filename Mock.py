@@ -108,7 +108,7 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                         ui.button('Generate Topographic Map', on_click=EegFunc.generate_Topo_Map)
                         ui.button('Generate Heat Map')
                         ui.button('Generate ICA', on_click=EegFunc.generate_ICA)
-                        ui.button('Generate Covariance chart')
+                        ui.button('Generate Covariance chart', on_click=EegFunc.generate_covariance)
                     #
                 #
             #

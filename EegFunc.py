@@ -20,6 +20,7 @@ def choose_local_file() -> None:
             global file 
             file = easygui.fileopenbox()
             ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20})
+            ui.button('Clear', on_click=container.clear)
             return container
         except:
             print("ERROR WITH choose_local_file")
@@ -88,3 +89,14 @@ def generate_ICA():
         ica.plot_overlay(raw)
     except:
         return
+    
+##Covariarance Function
+def generate_covariance():
+    raw = mne.io.read_raw_edf(file)
+    eegbci.standardize(raw)
+    montage = make_standard_montage("standard_1005")
+    raw.set_montage(montage)
+    
+    noise_cov = mne.compute_raw_covariance(raw, method="diagonal_fixed")
+    mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
+    
