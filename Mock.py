@@ -55,7 +55,7 @@ with ui.footer().style('background-color: #3874c8'):
 #End of the Footer---------------------------------------------------------------------------------------------------------------------------
 
 #EVERYTHING AFTER THIS LINE WILL GO INSIDE OF THE MAIN VIEW
-container = ui.row()
+
 
 
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
@@ -63,7 +63,6 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
         
                 with ui.stepper().props('vertical').classes('w-full') as stepper:
                     with ui.step('Choose File'):
-                        container
                         ui.button('Choose Local File', on_click=EegFunc.choose_local_file)
                         with ui.stepper_navigation():
                             ui.button('Next', on_click=stepper.next)
