@@ -10,7 +10,7 @@ from mne.datasets import eegbci
 import easygui
 
 
-###File SelectionS
+###File Selection
 
 def choose_local_file() -> None:
     container = ui.row()
@@ -20,7 +20,6 @@ def choose_local_file() -> None:
             global file 
             file = easygui.fileopenbox()
             ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20})
-            ui.button('Clear', on_click=container.clear)
             return container
         except:
             print("ERROR WITH choose_local_file")
