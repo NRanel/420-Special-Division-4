@@ -96,7 +96,6 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                             ui.label('options here')
                         #
                         with ui.stepper_navigation():
-                            ui.button('Next', on_click=stepper.next)
                             ui.button('Back', on_click=stepper.previous).props('flat')
                     #
                 #
