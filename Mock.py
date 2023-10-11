@@ -8,7 +8,6 @@ from mne.channels import make_standard_montage
 from mne.io import concatenate_raws, read_raw_edf
 from mne.datasets import eegbci
 import easygui
-import EegFunc
 import plotly.graph_objects as go
 ###Global variables
 
@@ -17,17 +16,93 @@ with ui.dialog().props('full-width') as dialog:
         content = ui.markdown()
 
 ###Necessary Functions for buttons
-EegFunc.generate_Bar_Graph
 
-EegFunc.generate_Topo_Map
+def choose_local_file() -> None:
+    container = ui.row()
+    with container:
+        container.clear()
+        try:
+            global file 
+            file = easygui.fileopenbox()
+            ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20})
+            ui.button('Clear', on_click=container.clear)
+            return container
+        except:
+            print("ERROR WITH choose_local_file")
+            return
+    #
+#
 
-EegFunc.raw_plot
+##Bar Graph Generator Function
+def generate_Bar_Graph(e: events.UploadEventArguments):
+    try:
+        raw = mne.io.read_raw_edf(file)
+    except:
+        print("ERROR IN generate_Bar_Graph")
+        return
+    
+##Topo Map Generator Fucnction
+def generate_Topo_Map():
+    print("File name" + file)
+    try:
+        raw = mne.io.read_raw_edf(file)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw.compute_psd().plot_topomap()
+    except:
+        print("ERROR IN generate_Topo_Map")
+        return
+    raw.plot_topomap()
 
-EegFunc.generate_montage_plot
+##Raw Plot Generator Function
+def raw_plot():
+    raw = mne.io.read_raw_edf(file)
+    eegbci.standardize(raw)
+    montage = make_standard_montage("standard_1005")
+    raw.set_montage(montage)
+    y = raw.plot()
+    print(type(y))
 
-EegFunc.generate_ICA
+
+##Montage Plot Generator Function
+def generate_montage_plot():
+    raw = mne.io.read_raw_edf(file)
+    eegbci.standardize(raw)
+    montage = make_standard_montage("standard_1005")
+    raw.set_montage(montage)
+    mne.viz.plot_montage(montage)
+    return
 
 
+##Ica Generator Function
+def generate_ICA():
+    try:
+        raw = mne.io.read_raw_edf(file)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+
+        ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+        ica.fit(raw)
+        ica.exclude = [15]  # ICA components
+        ica.plot_properties(raw, picks=ica.exclude)
+
+        mne.viz.plot_ica_sources(ica, raw)
+        ica.plot_components()
+        ica.plot_overlay(raw)
+    except:
+        return
+    
+##Covariarance Function
+def generate_covariance():
+    raw = mne.io.read_raw_edf(file)
+    eegbci.standardize(raw)
+    montage = make_standard_montage("standard_1005")
+    raw.set_montage(montage)
+    
+    noise_cov = mne.compute_raw_covariance(raw, method="diagonal_fixed")
+    mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
 
 
 #BEGINNING OF PAGE LAYOUT
@@ -65,7 +140,7 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                 with ui.stepper().props('vertical').classes('w-full') as stepper:
                     with ui.step('Choose File'):
                         container
-                        ui.button('Choose Local File', on_click=EegFunc.choose_local_file)
+                        ui.button('Choose Local File', on_click= choose_local_file)
                         with ui.stepper_navigation():
                             ui.button('Next', on_click=stepper.next)
                     #
@@ -98,26 +173,29 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                         #
                         with ui.stepper_navigation():
                             ui.button('Next', on_click=stepper.next)
-                            ui.button('Back', on_click=stepper.previous).props('flat') 
-                    # 
-                #
-                        fig = go.Figure(go.Scatter(x=[1, 2, 3, 4], y=[1, 2, 3, 2.5]))   
-                        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-                        ui.plotly(fig).classes('w-full h-40')
-           
-                with ui.column():
-                        ui.button('Raw Plot', on_click=EegFunc.raw_plot)
-                        ui.button('Generate Montage Plot', on_click=EegFunc.generate_montage_plot)
-                        ui.button('Generate Bar Graph')
-                        ui.button('Generate Topographic Map', on_click=EegFunc.generate_Topo_Map)
-                        ui.button('Generate Heat Map')
-                        ui.button('Generate ICA', on_click=EegFunc.generate_ICA)
-                        ui.button('Generate Covariance chart')
+                            ui.button('Back', on_click=stepper.previous).props('flat')
                     #
                 #
-            #
-        #
+                fig = go.Figure(go.Scatter(x=[1, 2, 3, 4], y=[1, 2, 3, 2.5]))   
+                fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+                ui.plotly(fig).classes('w-full h-40') 
+                 
+                with ui.column():
+                        ui.button('Raw Plot', on_click= raw_plot)
+                        ui.button('Generate Montage Plot', on_click= generate_montage_plot)
+                        ui.button('Generate Bar Graph')
+                        ui.button('Generate Topographic Map', on_click= generate_Topo_Map)
+                        ui.button('Generate Heat Map')
+                        ui.button('Generate ICA', on_click= generate_ICA)
+                        ui.button('Generate Covariance chart', on_click= generate_covariance)
+                    #
+                #  
+               
     #
+        #
+
+    #
+
 #
     #
     with ui.tab_panel('Preprocessing'):
@@ -146,6 +224,5 @@ with ui.footer(value=False) as footer:
 with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
     ui.button(on_click=footer.toggle, icon='contact_support').props('fab')
 #
-
-
 ui.run()
+
