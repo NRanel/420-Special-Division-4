@@ -9,6 +9,7 @@ from mne.io import concatenate_raws, read_raw_edf
 from mne.datasets import eegbci
 import easygui
 import EegFunc
+import plotly.graph_objects as go
 ###Global variables
 
 with ui.dialog().props('full-width') as dialog:
@@ -97,9 +98,12 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                         #
                         with ui.stepper_navigation():
                             ui.button('Next', on_click=stepper.next)
-                            ui.button('Back', on_click=stepper.previous).props('flat')
-                    #
+                            ui.button('Back', on_click=stepper.previous).props('flat') 
+                    # 
                 #
+                        fig = go.Figure(go.Scatter(x=[1, 2, 3, 4], y=[1, 2, 3, 2.5]))   
+                        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+                        ui.plotly(fig).classes('w-full h-40')
            
                 with ui.column():
                         ui.button('Raw Plot', on_click=EegFunc.raw_plot)
