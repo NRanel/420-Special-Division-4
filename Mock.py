@@ -104,6 +104,28 @@ def generate_covariance():
     noise_cov = mne.compute_raw_covariance(raw, method="diagonal_fixed")
     mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
 
+#Plot Creation Function
+def create_mne_plot(data):
+
+    fig = go.Figure(go.Scatter(x=data.times, y=data.get_data()[0]))
+
+    fig.update_layout(
+        title='EEG data plot',
+        xaxis=dict(title='time (s)'),
+        yaxis=dict(title='Amplitude')
+    )
+    return fig
+
+# Define the function to process the file
+def process_file():
+    global file
+    if file:
+        try:
+            raw = mne.io.read_raw_edf(file, preload=True)  # Load the EEG data
+            fig = create_mne_plot(raw)  # Create a Plotly figure
+            ui.plotly(fig).classes('w-full h-90')  # Display the figure
+        except Exception as e:
+            print(f"Error processing the file: {str(e)}")
 
 #BEGINNING OF PAGE LAYOUT
 
@@ -176,11 +198,10 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                             ui.button('Back', on_click=stepper.previous).props('flat')
                     #
                 #
-                fig = go.Figure(go.Scatter(x=[1, 2, 3, 4], y=[1, 2, 3, 2.5]))   
-                fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-                ui.plotly(fig).classes('w-full h-40') 
+                #place plot here
                  
                 with ui.column():
+                        ui.button('Process File', on_click=process_file)
                         ui.button('Raw Plot', on_click= raw_plot)
                         ui.button('Generate Montage Plot', on_click= generate_montage_plot)
                         ui.button('Generate Bar Graph')
