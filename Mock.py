@@ -140,11 +140,12 @@ def process_file():
 
 #Start of Header-----------------------------------------------------------------------------------------------------------------------------
 with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
-    dark = ui.dark_mode()
+    dark = ui.dark_mode(False)
     with ui.tabs() as tabs:
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
+    ui.switch('Mode').bind_value(dark)
 
 #End of Header-------------------------------------------------------------------------------------------------------------------------------
 
@@ -154,10 +155,10 @@ with ui.header(elevated=True).style('background-color: #3874c8').classes('items-
 
 
 #Here is the start of the Footer-------------------------------------------------------------------------------------------------------------
-with ui.footer().style('background-color: #3874c8'):
-    with ui.row().classes('w-full justify-center'):
-        ui.button('Dark', on_click=dark.enable)
-        ui.button('Light', on_click=dark.disable)    
+#with ui.footer().style('background-color: #3874c8'):
+#    with ui.row().classes('w-full justify-center'):
+#        ui.button('Dark', on_click=dark.enable)
+#        ui.button('Light', on_click=dark.disable)    
 
 #End of the Footer---------------------------------------------------------------------------------------------------------------------------
 
