@@ -9,9 +9,6 @@ from mne.io import concatenate_raws, read_raw_edf
 from mne.datasets import eegbci
 import easygui
 import plotly.graph_objects as go
-import plotly.tools as tls
-import chart_studio.plotly as py
-
 ###Global variables
 
 with ui.dialog().props('full-width') as dialog:
@@ -37,9 +34,16 @@ def choose_local_file() -> None:
 #
 
 ##Bar Graph Generator Function
-def generate_Bar_Graph(e: events.UploadEventArguments):
+def generate_Bar_Graph():
     try:
+        placement.clear()
         raw = mne.io.read_raw_edf(file)
+        fig = go.Figure(go.Bar(x=raw.times, y=raw.get_data()[0]))
+        fig.update_layout(
+            title='EEG Bar Graph'
+        )
+        figure = ui.plotly(fig).classes('w-full h-90')
+        figure.move(placement)
     except:
         print("ERROR IN generate_Bar_Graph")
         return
@@ -124,17 +128,11 @@ def process_file():
     global file
     if file:
         try:
+            placement.clear()
             raw = mne.io.read_raw_edf(file, preload=True)  # Load the EEG data
-            eegbci.standardize(raw)
-            montage = make_standard_montage("standard_1005")
-            raw.set_montage(montage)
-            fig = raw.plot(show=False)  # Create a Plotly figure
-            print(fig)
-            ui.plotly(py.iplot_mpl(mne.viz.plot_raw(raw))).classes('w-full h-90') # Display the figure
-            #with ui.pyplot():
-            #    x = plt.figure()
-            #    x.add_subfigure(fig)
-            #    x.plot()
+            fig = create_mne_plot(raw)  # Create a Plotly figure
+            figure = ui.plotly(fig).classes('w-full h-90')  # Display the figure
+            figure.move(placement)
         except Exception as e:
             print(f"Error processing the file: {str(e)}")
 
@@ -142,11 +140,12 @@ def process_file():
 
 #Start of Header-----------------------------------------------------------------------------------------------------------------------------
 with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
-    dark = ui.dark_mode()
+    dark = ui.dark_mode(False)
     with ui.tabs() as tabs:
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
+    ui.switch('Mode').bind_value(dark)
 
 #End of Header-------------------------------------------------------------------------------------------------------------------------------
 
@@ -156,17 +155,16 @@ with ui.header(elevated=True).style('background-color: #3874c8').classes('items-
 
 
 #Here is the start of the Footer-------------------------------------------------------------------------------------------------------------
-with ui.footer().style('background-color: #3874c8'):
-    with ui.row():
-        ui.button('Dark', on_click=dark.enable)
-        ui.button('Light', on_click=dark.disable)    
+#with ui.footer().style('background-color: #3874c8'):
+#    with ui.row().classes('w-full justify-center'):
+#        ui.button('Dark', on_click=dark.enable)
+#        ui.button('Light', on_click=dark.disable)    
 
 #End of the Footer---------------------------------------------------------------------------------------------------------------------------
 
 #EVERYTHING AFTER THIS LINE WILL GO INSIDE OF THE MAIN VIEW
 container = ui.row()
-
-
+placement = ui.row().classes('w-full justify-center')
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('Local Files'):
         
@@ -210,12 +208,11 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                     #
                 #
                 #place plot here
-                 
-                with ui.column():
+                with ui.row().classes('w-full justify-center m-3'):
                         ui.button('Process File', on_click=process_file)
                         ui.button('Raw Plot', on_click= raw_plot)
                         ui.button('Generate Montage Plot', on_click= generate_montage_plot)
-                        ui.button('Generate Bar Graph')
+                        ui.button('Generate Bar Graph', on_click=generate_Bar_Graph)
                         ui.button('Generate Topographic Map', on_click= generate_Topo_Map)
                         ui.button('Generate Heat Map')
                         ui.button('Generate ICA', on_click= generate_ICA)

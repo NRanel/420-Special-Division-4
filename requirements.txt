@@ -38,6 +38,7 @@ orjson==3.9.7
 packaging==23.1
 Pillow==10.0.1
 platformdirs==3.10.0
+plotly==5.17.0
 pooch==1.7.0
 pscript==0.7.7
 pydantic==2.3.0
