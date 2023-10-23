@@ -9,6 +9,8 @@ from mne.io import concatenate_raws, read_raw_edf
 from mne.datasets import eegbci
 import easygui
 import plotly.graph_objects as go
+from mne.datasets import eegbci
+
 ###Global variables
 
 with ui.dialog().props('full-width') as dialog:
@@ -60,7 +62,7 @@ def generate_Topo_Map():
     except:
         print("ERROR IN generate_Topo_Map")
         return
-    raw.plot_topomap()
+    
 
 ##Raw Plot Generator Function
 def raw_plot():
@@ -68,8 +70,7 @@ def raw_plot():
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
     raw.set_montage(montage)
-    y = raw.plot()
-    print(type(y))
+    y = raw.plot(block=True)
 
 
 ##Montage Plot Generator Function
@@ -77,9 +78,9 @@ def generate_montage_plot():
     raw = mne.io.read_raw_edf(file)
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
-    raw.set_montage(montage)
-    mne.viz.plot_montage(montage)
-    return
+    raw.plot_sensors(ch_type="eeg")
+    montage.plot()
+    
 
 
 ##Ica Generator Function
@@ -99,7 +100,7 @@ def generate_ICA():
         ica.plot_components()
         ica.plot_overlay(raw)
     except:
-        return
+        print('Failed ICA')
     
 ##Covariarance Function
 def generate_covariance():
@@ -136,6 +137,25 @@ def process_file():
         except Exception as e:
             print(f"Error processing the file: {str(e)}")
 
+########### Functions For MNE Datasets
+
+def EEGBCI():
+    
+    subject = 1
+    runs = [1,2,3,4]
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    eegbci.standardize(raw)  # set channel names
+    montage = make_standard_montage("standard_1005")
+    raw.set_montage(montage)
+    raw.plot(block=True)
+    
+
+
+
+#################################
+
+
 #BEGINNING OF PAGE LAYOUT
 
 #Start of Header-----------------------------------------------------------------------------------------------------------------------------
@@ -167,64 +187,62 @@ container = ui.row()
 placement = ui.row().classes('w-full justify-center')
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('Local Files'):
-        
-                with ui.stepper().props('vertical').classes('w-full') as stepper:
-                    with ui.step('Choose File'):
-                        container
-                        ui.button('Choose Local File', on_click= choose_local_file)
-                        with ui.stepper_navigation():
-                            ui.button('Next', on_click=stepper.next)
+        with ui.stepper().props('vertical').classes('w-full') as stepper:
+            with ui.step('Choose File'):
+                container
+                ui.button('Choose Local File', on_click= choose_local_file)
+                with ui.stepper_navigation():
+                    ui.button('Next', on_click=stepper.next)
+            #
+            with ui.step('Choose Filters'):
+                with ui.row():
+                    band_filter = ui.checkbox('Band Filter', value=False)
+                    other_filter = ui.checkbox('Other Filter', value = False)
+                #
+                ui.separator()
+                with ui.column().bind_visibility_from(band_filter, 'value'):
+                    
+                    with ui.row():
+                        
+                        highpass = ui.checkbox('Highpass Filter', value=True)
+                        lowpass = ui.checkbox('Lowpass filter', value=True)
                     #
-                    with ui.step('Choose Filters'):
-                        with ui.row():
-                            band_filter = ui.checkbox('Band Filter', value=False)
-                            other_filter = ui.checkbox('Other Filter', value = False)
+                    with ui.row():
+                        with ui.column().bind_visibility_from(highpass, 'value'):
+                            ui.number(label='Highpass Filter', value=7, format='%.1f')
                         #
-                        ui.separator()
-                        with ui.column().bind_visibility_from(band_filter, 'value'):
-                            
-                            with ui.row():
-                                
-                                highpass = ui.checkbox('Highpass Filter', value=True)
-                                lowpass = ui.checkbox('Lowpass filter', value=True)
-                            #
-                            with ui.row():
-                                with ui.column().bind_visibility_from(highpass, 'value'):
-                                    ui.number(label='Highpass Filter', value=7, format='%.1f')
-                                #
-                                with ui.column().bind_visibility_from(lowpass, 'value'):
-                                    ui.number(label='Highpass Filter', value=30, format='%.1f')
-                                #
-                            #
+                        with ui.column().bind_visibility_from(lowpass, 'value'):
+                            ui.number(label='Highpass Filter', value=30, format='%.1f')
                         #
-                        ui.separator()
-                        with ui.column().bind_visibility_from(other_filter, 'value'):
-                            
-                            ui.label('options here')
-                        #
-                        with ui.stepper_navigation():
-                            ui.button('Next', on_click=stepper.next)
-                            ui.button('Back', on_click=stepper.previous).props('flat')
                     #
                 #
-                #place plot here
-                with ui.row().classes('w-full justify-center m-3'):
-                        ui.button('Process File', on_click=process_file)
-                        ui.button('Raw Plot', on_click= raw_plot)
-                        ui.button('Generate Montage Plot', on_click= generate_montage_plot)
-                        ui.button('Generate Bar Graph', on_click=generate_Bar_Graph)
-                        ui.button('Generate Topographic Map', on_click= generate_Topo_Map)
-                        ui.button('Generate Heat Map')
-                        ui.button('Generate ICA', on_click= generate_ICA)
-                        ui.button('Generate Covariance chart', on_click= generate_covariance)
-                    #
-                #  
+                ui.separator()
+                with ui.column().bind_visibility_from(other_filter, 'value'):
+                    
+                    ui.label('options here')
+                #
+                with ui.stepper_navigation():
+                    ui.button('Next', on_click=stepper.next)
+                    ui.button('Back', on_click=stepper.previous).props('flat')
+            #
+        #
+        #place plot here
+        with ui.row().classes('w-full justify-center m-3'):
+                ui.button('Process File', on_click=process_file)
+                ui.button('Raw Plot', on_click= raw_plot)
+                ui.button('Generate Montage Plot', on_click= generate_montage_plot)
+                ui.button('Generate Bar Graph', on_click=generate_Bar_Graph)
+                ui.button('Generate Topographic Map', on_click= generate_Topo_Map)
+                ui.button('Generate Heat Map')
+                ui.button('Generate ICA', on_click= generate_ICA)
+                ui.button('Generate Covariance chart', on_click= generate_covariance)
+            #
+        #  
                
     #
         #
 
     #
-
 #
     #
     with ui.tab_panel('Preprocessing'):
@@ -233,7 +251,23 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('MNE Datasets'):
         with ui.row():
             ui.label('Sample Data from the MNE Library')
-            ui.select(['Library 1', 'BCIEEG Data', 3], value=1)
+
+            
+        with ui.row():
+            dataset = ui.toggle(['EEGBCI', 'Eyelink'], value=1)
+        with ui.row():
+            ui.label(' ')
+        with ui.row().bind_visibility_from(dataset, 'value'):
+            ui.input('Subjects', placeholder='4',
+                     on_change=lambda e:subject_label.set_text('Subjects selected: ' + e.value)
+                     )
+            subject_label = ui.label()
+        with ui.row().bind_visibility_from(dataset, 'value'):
+            ui.input('Runs', placeholder='1,2,3,4',
+                     on_change=lambda e:runs_label.set_text('Runs selected: ' + e.value))
+            runs_label = ui.label()
+        with ui.row().bind_visibility_from(dataset, 'value'):
+            ui.button('Run', on_click=EEGBCI)
         #
     #
 #
