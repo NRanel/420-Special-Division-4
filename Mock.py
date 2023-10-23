@@ -9,6 +9,9 @@ from mne.io import concatenate_raws, read_raw_edf
 from mne.datasets import eegbci
 import easygui
 import plotly.graph_objects as go
+import plotly.tools as tls
+import chart_studio.plotly as py
+
 ###Global variables
 
 with ui.dialog().props('full-width') as dialog:
@@ -122,8 +125,16 @@ def process_file():
     if file:
         try:
             raw = mne.io.read_raw_edf(file, preload=True)  # Load the EEG data
-            fig = create_mne_plot(raw)  # Create a Plotly figure
-            ui.plotly(fig).classes('w-full h-90')  # Display the figure
+            eegbci.standardize(raw)
+            montage = make_standard_montage("standard_1005")
+            raw.set_montage(montage)
+            fig = raw.plot(show=False)  # Create a Plotly figure
+            print(fig)
+            ui.plotly(py.iplot_mpl(mne.viz.plot_raw(raw))).classes('w-full h-90') # Display the figure
+            #with ui.pyplot():
+            #    x = plt.figure()
+            #    x.add_subfigure(fig)
+            #    x.plot()
         except Exception as e:
             print(f"Error processing the file: {str(e)}")
 
