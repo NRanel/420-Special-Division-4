@@ -83,7 +83,7 @@ def generate_montage_plot():
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
     raw = apply_filter(raw)
-    raw.plot_sensors(ch_type="eeg")
+    #raw.plot_sensors(ch_type="eeg")
     montage.plot()
     
 
@@ -147,11 +147,11 @@ def apply_filter(raw):
     if highpass.value == True & lowpass.value == True:
         raw.filter(lowpass_value.value, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
     elif highpass.value == True & lowpass.value == False:
-        raw.filter(0, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
+        raw.filter(None, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
     elif highpass.value == False & lowpass.value == True:
-        raw.filter(lowpass_value.value, 70, fir_design="firwin", skip_by_annotation="edge")
+        raw.filter(lowpass_value.value, None, fir_design="firwin", skip_by_annotation="edge")
     elif highpass.value == False & lowpass.value == False:
-        raw.filter(0, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
+        raw.filter(None, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
     return raw
 
 ########### Functions For MNE Datasets
@@ -216,7 +216,7 @@ with ui.header(elevated=True).style('background-color: #3874c8').classes('items-
 
 #EVERYTHING AFTER THIS LINE WILL GO INSIDE OF THE MAIN VIEW
 container = ui.row()
-placement = ui.row().classes('w-full justify-center')
+
 with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
     with ui.tab_panel('Local Files'):
         with ui.stepper().props('vertical').classes('w-full') as stepper:
@@ -235,16 +235,16 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                 with ui.column().bind_visibility_from(band_filter, 'value'):
                     
                     with ui.row():
-                        
-                        lowpass = ui.checkbox('Lowpass Filter', value=True)
                         highpass = ui.checkbox('Highpass filter', value=True)
+                        lowpass = ui.checkbox('Lowpass Filter', value=True)
+                        
                     #
                     with ui.row():
                         with ui.column().bind_visibility_from(highpass, 'value'):
                             lowpass_value = ui.number(label='Highpass Filter', value=7, format='%.1f')
                         #
                         with ui.column().bind_visibility_from(lowpass, 'value'):
-                            highpass_value = ui.number(label='Highpass Filter', value=30, format='%.1f')
+                            highpass_value = ui.number(label='Lowpass Filter', value=30, format='%.1f')
                         #
                     #
                 #
@@ -269,7 +269,9 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                 ui.button('Generate ICA', on_click= generate_ICA)
                 ui.button('Generate Covariance chart', on_click= generate_covariance)
             #
-        #  
+        #
+        with ui.row():
+            placement = ui.row().classes('w-full justify-center')  
                
     #
         #
