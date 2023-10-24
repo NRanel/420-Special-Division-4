@@ -11,6 +11,7 @@ import easygui
 import plotly.graph_objects as go
 from mne.datasets import eegbci
 import re
+import os
 
 ###Global variables
 
@@ -27,7 +28,7 @@ def choose_local_file() -> None:
         try:
             global file 
             file = easygui.fileopenbox()
-            ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20})
+            ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20}).props('clearable')
             ui.button('Clear', on_click=container.clear)
             return container
         except:
@@ -55,10 +56,11 @@ def generate_Bar_Graph():
 def generate_Topo_Map():
     print("File name" + file)
     try:
-        raw = mne.io.read_raw_edf(file)
+        raw = mne.io.read_raw_edf(file, preload=True)
         eegbci.standardize(raw)
         montage = make_standard_montage("standard_1005")
         raw.set_montage(montage)
+        raw = apply_filter(raw)
         raw.compute_psd().plot_topomap()
     except:
         print("ERROR IN generate_Topo_Map")
@@ -71,7 +73,7 @@ def raw_plot():
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
     raw.set_montage(montage)
-    apply_filter(raw)
+    raw = apply_filter(raw)
     raw.plot(block=True)
 
 
@@ -80,6 +82,7 @@ def generate_montage_plot():
     raw = mne.io.read_raw_edf(file, preload=True)
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
+    raw = apply_filter(raw)
     raw.plot_sensors(ch_type="eeg")
     montage.plot()
     
@@ -88,11 +91,11 @@ def generate_montage_plot():
 ##Ica Generator Function
 def generate_ICA():
     try:
-        raw = mne.io.read_raw_edf(file)
+        raw = mne.io.read_raw_edf(file, preload=True)
         eegbci.standardize(raw)
         montage = make_standard_montage("standard_1005")
         raw.set_montage(montage)
-
+        raw = apply_filter(raw)
         ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
         ica.fit(raw)
         ica.exclude = [15]  # ICA components
@@ -106,11 +109,11 @@ def generate_ICA():
     
 ##Covariarance Function
 def generate_covariance():
-    raw = mne.io.read_raw_edf(file)
+    raw = mne.io.read_raw_edf(file, preload=True)
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
     raw.set_montage(montage)
-    
+    raw = apply_filter(raw)
     noise_cov = mne.compute_raw_covariance(raw, method="diagonal_fixed")
     mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
 
@@ -133,6 +136,7 @@ def process_file():
         try:
             placement.clear()
             raw = mne.io.read_raw_edf(file, preload=True)  # Load the EEG data
+            raw = apply_filter(raw)
             fig = create_mne_plot(raw)  # Create a Plotly figure
             figure = ui.plotly(fig).classes('w-full h-90')  # Display the figure
             figure.move(placement)
@@ -153,6 +157,14 @@ def apply_filter(raw):
 ########### Functions For MNE Datasets
 
 def EEGBCI():
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+
     print(subject_label.text, " Subject")
     print(runs_label.text, ' Runs')
     subject = re.findall(r'\d+', subject_label.text)
@@ -222,15 +234,15 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                     
                     with ui.row():
                         
-                        highpass = ui.checkbox('Highpass Filter', value=True)
-                        lowpass = ui.checkbox('Lowpass filter', value=True)
+                        lowpass = ui.checkbox('Lowpass Filter', value=True)
+                        highpass = ui.checkbox('Highpass filter', value=True)
                     #
                     with ui.row():
                         with ui.column().bind_visibility_from(highpass, 'value'):
-                            highpass_value = ui.number(label='Highpass Filter', value=7, format='%.1f')
+                            lowpass_value = ui.number(label='Highpass Filter', value=7, format='%.1f')
                         #
                         with ui.column().bind_visibility_from(lowpass, 'value'):
-                            lowpass_value = ui.number(label='Highpass Filter', value=30, format='%.1f')
+                            highpass_value = ui.number(label='Highpass Filter', value=30, format='%.1f')
                         #
                     #
                 #
