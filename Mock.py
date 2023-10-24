@@ -28,8 +28,8 @@ def choose_local_file() -> None:
         try:
             global file 
             file = easygui.fileopenbox()
-            ui.input(label="Local File Path", value=f"{file}", placeholder='Local File Path', validation={'Input too long': lambda value: len(value) < 20}).props('clearable')
-            ui.button('Clear', on_click=container.clear)
+            localfile_input.value = f"{file}"
+            #ui.button('Clear', on_click=container.clear)
             return container
         except:
             print("ERROR WITH choose_local_file")
@@ -223,6 +223,7 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
             with ui.step('Choose File'):
                 container
                 ui.button('Choose Local File', on_click= choose_local_file)
+                localfile_input = ui.input(label="Local File Path", placeholder='Local File Path').props('clearable')
                 with ui.stepper_navigation():
                     ui.button('Next', on_click=stepper.next)
             #
