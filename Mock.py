@@ -67,16 +67,17 @@ def generate_Topo_Map():
 
 ##Raw Plot Generator Function
 def raw_plot():
-    raw = mne.io.read_raw_edf(file)
+    raw = mne.io.read_raw_edf(file, preload=True)
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
     raw.set_montage(montage)
-    y = raw.plot(block=True)
+    apply_filter(raw)
+    raw.plot(block=True)
 
 
 ##Montage Plot Generator Function
 def generate_montage_plot():
-    raw = mne.io.read_raw_edf(file)
+    raw = mne.io.read_raw_edf(file, preload=True)
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
     raw.plot_sensors(ch_type="eeg")
@@ -137,6 +138,17 @@ def process_file():
             figure.move(placement)
         except Exception as e:
             print(f"Error processing the file: {str(e)}")
+
+def apply_filter(raw):
+    if highpass.value == True & lowpass.value == True:
+        raw.filter(lowpass_value.value, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
+    elif highpass.value == True & lowpass.value == False:
+        raw.filter(0, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
+    elif highpass.value == False & lowpass.value == True:
+        raw.filter(lowpass_value.value, 70, fir_design="firwin", skip_by_annotation="edge")
+    elif highpass.value == False & lowpass.value == False:
+        raw.filter(0, highpass_value.value, fir_design="firwin", skip_by_annotation="edge")
+    return raw
 
 ########### Functions For MNE Datasets
 
@@ -215,10 +227,10 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                     #
                     with ui.row():
                         with ui.column().bind_visibility_from(highpass, 'value'):
-                            ui.number(label='Highpass Filter', value=7, format='%.1f')
+                            highpass_value = ui.number(label='Highpass Filter', value=7, format='%.1f')
                         #
                         with ui.column().bind_visibility_from(lowpass, 'value'):
-                            ui.number(label='Highpass Filter', value=30, format='%.1f')
+                            lowpass_value = ui.number(label='Highpass Filter', value=30, format='%.1f')
                         #
                     #
                 #
