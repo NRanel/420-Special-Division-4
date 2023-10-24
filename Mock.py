@@ -10,6 +10,7 @@ from mne.datasets import eegbci
 import easygui
 import plotly.graph_objects as go
 from mne.datasets import eegbci
+import re
 
 ###Global variables
 
@@ -140,9 +141,14 @@ def process_file():
 ########### Functions For MNE Datasets
 
 def EEGBCI():
-    
-    subject = 1
-    runs = [1,2,3,4]
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
     raw_fnames = eegbci.load_data(subject, runs)
     raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
     eegbci.standardize(raw)  # set channel names
@@ -267,7 +273,7 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                      on_change=lambda e:runs_label.set_text('Runs selected: ' + e.value))
             runs_label = ui.label()
         with ui.row().bind_visibility_from(dataset, 'value'):
-            ui.button('Run', on_click=EEGBCI)
+            ui.button('Raw Plot', on_click=EEGBCI)
         #
     #
 #
