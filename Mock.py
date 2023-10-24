@@ -164,9 +164,11 @@ def EEGBCI():
     if not os.path.exists(home_directory):
         os.mkdir(home_directory)
     
-
+    #Shows runs for testing
     print(subject_label.text, " Subject")
     print(runs_label.text, ' Runs')
+    
+    #regular expresions 
     subject = re.findall(r'\d+', subject_label.text)
     runs = re.findall(r'\d+', runs_label.text)
     subject = int(subject[0])
