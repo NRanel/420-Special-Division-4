@@ -194,6 +194,7 @@ def EEGBCI():
 with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
     dark = ui.dark_mode(False)
     with ui.tabs() as tabs:
+        ui.image("brainwave_compnay_logo.png").classes("w-16")
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
