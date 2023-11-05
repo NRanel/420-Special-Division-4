@@ -157,6 +157,9 @@ def apply_filter(raw):
 ########### Functions For MNE Datasets
 
 def EEGBCI():
+    #tried to get it to run in background so it doesnt freeze the application
+    #does not work on windows
+    #pid = os.fork()
     #ensure the correct folder exists for mne
     home_directory = os.path.expanduser( '~' )
     home_directory = home_directory + '\mne_data'
@@ -194,6 +197,7 @@ def EEGBCI():
 with ui.header(elevated=True).style('background-color: #3874c8').classes('items-center justify-between'):
     dark = ui.dark_mode(False)
     with ui.tabs() as tabs:
+        ui.image('brainwave_compnay_logo.png').classes('w-16')
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
         ui.tab('Preprocessing')
