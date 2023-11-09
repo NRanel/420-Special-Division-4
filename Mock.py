@@ -1,4 +1,5 @@
 from nicegui import ui
+from nicegui import run
 from nicegui import events
 import mne
 import numpy as nppip
@@ -12,6 +13,7 @@ import plotly.graph_objects as go
 from mne.datasets import eegbci
 import re
 import os
+from multiprocessing import Process
 
 ###Global variables
 
@@ -156,7 +158,7 @@ def apply_filter(raw):
 
 ########### Functions For MNE Datasets
 
-def EEGBCI():
+def EEGBCI_raw_plot():
     #ensure the correct folder exists for mne
     home_directory = os.path.expanduser( '~' )
     home_directory = home_directory + '\mne_data'
@@ -181,6 +183,78 @@ def EEGBCI():
     montage = make_standard_montage("standard_1005")
     raw.set_montage(montage)
     raw.plot(block=True)
+#
+
+def EEGBCI_generate_montage_plot():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    eegbci.standardize(raw)
+    montage = make_standard_montage("standard_1005")
+    raw = apply_filter(raw)
+    #raw.plot_sensors(ch_type="eeg")
+    montage.plot()
+#
+
+async def EEGBCI_generate_Topo_Map():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        raw.compute_psd().plot_topomap()
+    except:
+        print("ERROR IN generate_Topo_Map")
+        return
+#
+
+def test():
+    process = Process(target=EEGBCI_raw_plot)
+    process.start()
+    process.join()
+#
+
     
 
 
@@ -197,7 +271,7 @@ with ui.header(elevated=True).style('background-color: #3874c8').classes('items-
         ui.image("brainwave_compnay_logo.png").classes("w-16")
         ui.tab('Local Files')
         ui.tab('MNE Datasets')
-        ui.tab('Preprocessing')
+        #ui.tab('Preprocessing')
     ui.switch('Mode').bind_value(dark)
 
 #End of Header-------------------------------------------------------------------------------------------------------------------------------
@@ -267,7 +341,8 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                 ui.button('Generate Montage Plot', on_click= generate_montage_plot)
                 ui.button('Generate Bar Graph', on_click=generate_Bar_Graph)
                 ui.button('Generate Topographic Map', on_click= generate_Topo_Map)
-                ui.button('Generate Heat Map')
+                #This literally did nothing, so im commenting it out
+                #ui.button('Generate Heat Map')
                 ui.button('Generate ICA', on_click= generate_ICA)
                 ui.button('Generate Covariance chart', on_click= generate_covariance)
             #
@@ -303,7 +378,13 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                      on_change=lambda e:runs_label.set_text('Runs selected: ' + e.value))
             runs_label = ui.label()
         with ui.row().bind_visibility_from(dataset, 'value'):
-            ui.button('Raw Plot', on_click=EEGBCI)
+            ui.button('Raw Plot', on_click=EEGBCI_raw_plot)
+            ui.button('Generate Montage Plot', on_click= EEGBCI_generate_montage_plot)
+            #ui.button('Generate Bar Graph', on_click=EEGBCI_generate_Bar_Graph)
+            ui.button('Generate Topographic Map', on_click= EEGBCI_generate_Topo_Map)
+            #ui.button('Generate Heat Map')
+            #ui.button('Generate ICA', on_click=EEGBCI_generate_ICA)
+            #ui.button('Generate Covariance chart', on_click=EEGBCI_generate_covariance)
         #
     #
 #
