@@ -14,6 +14,7 @@ from mne.datasets import eegbci
 import re
 import os
 from multiprocessing import Process
+import sklearn
 
 ###Global variables
 
@@ -93,35 +94,83 @@ def generate_montage_plot():
 ##Ica Generator Function
 def generate_ICA():
     try:
-        tmin, tmax = -1.0, 4.0
-        event_id = dict(hands=2, feet=3)
-        subject = 1
-        runs = [6, 10, 14]
-        raw_fnames = eegbci.load_data(subject, runs)
-        raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+        raw = mne.io.read_raw_edf(file, preload=True)
         eegbci.standardize(raw)
         montage = make_standard_montage("standard_1005")
         raw.set_montage(montage)
-        #raw = apply_filter(raw)
-        raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
+        raw = apply_filter(raw)
+        #raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
         events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
         picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
         ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
         ica.fit(raw)
         ica.exclude = [15]  # ICA components
         ica.plot_properties(raw, picks=ica.exclude)
+
+    except:
+        print('Failed ICA')
+        print("Ensure you have a file selected")
+    
+##ICA components function
+def generate_ica_components():
+    try:
+        raw = mne.io.read_raw_edf(file, preload=True)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+
+        events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
+        picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
+
+        ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+        ica.fit(raw)
+        ica.exclude = [15]  # ICA components
         
-        #noise_cov = mne.compute_raw_covariance(raw, method="shrunk")
-        #fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
 
         mne.viz.plot_ica_sources(ica, raw)
         ica.plot_components()
+    except:
+        print("ICA components failed")
+        print("Ensure you have a filed selected")
+        
+##ICA plot overlay
+def generate_ica_plot_overlay():
+    try:
+        raw = mne.io.read_raw_edf(file, preload=True)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        #raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
+        events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
+        picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
+        ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+        ica.fit(raw)
+        ica.exclude = [15]  # ICA components
+
+        #mne.viz.plot_ica_sources(ica, raw)
         ica.plot_overlay(raw)
     except:
-        print('Failed ICA')
+        print('Failed ICA plot overlay')
+        print("Ensure you have a file selected")
     
+##EEG Covariance
+def generate_covariance_shrunk():
+    try:
+        raw = mne.io.read_raw_edf(file, preload=True)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        noise_cov = mne.compute_raw_covariance(raw, method="shrunk")
+        fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
+    except:
+        print("EEG covariance failed")
+        print("Ensure you have a filed selected")
+
 ##Covariarance Function
-def generate_covariance():
+def generate_covariance_diagonal_fixed():
     raw = mne.io.read_raw_edf(file, preload=True)
     eegbci.standardize(raw)
     montage = make_standard_montage("standard_1005")
@@ -226,7 +275,7 @@ def EEGBCI_generate_montage_plot():
     montage.plot()
 #
 
-async def EEGBCI_generate_Topo_Map():
+def EEGBCI_generate_Topo_Map():
     #boilerplate start
     #ensure the correct folder exists for mne
     home_directory = os.path.expanduser( '~' )
@@ -259,6 +308,268 @@ async def EEGBCI_generate_Topo_Map():
         print("ERROR IN generate_Topo_Map")
         return
 #
+
+def EEGBCI_generate_ICA():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+
+    eegbci.standardize(raw)
+    montage = make_standard_montage("standard_1005")
+    raw.set_montage(montage)
+    raw = apply_filter(raw)
+    #raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
+    events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
+    picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
+    ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+    ica.fit(raw)
+    ica.exclude = [15]  # ICA components
+    ica.plot_properties(raw, picks=ica.exclude)
+
+    print('Failed ICA')
+    print("Ensure you have a file selected")
+#
+def EEGBCI_generate_ICA_components():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        #raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
+        events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
+        picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
+        ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+        ica.fit(raw)
+        ica.exclude = [15]  # ICA components
+        
+
+        mne.viz.plot_ica_sources(ica, raw)
+        ica.plot_components()
+
+    except:
+        print('Failed ICA')
+        print("Ensure you have a file selected")
+
+def EEGBCI_generate_ICA_plot_overlay():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        #raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
+        events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
+        picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
+        ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
+        ica.fit(raw)
+        ica.exclude = [15]  # ICA components
+
+        #mne.viz.plot_ica_sources(ica, raw)
+        ica.plot_overlay(raw)
+    except:
+        print('Failed ICA plot overlay')
+        print("Ensure you have a file selected")
+
+def EEGBCI_generate_covariance_shrunk():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        noise_cov = mne.compute_raw_covariance(raw, method="shrunk")
+        fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
+    except:
+        print("EEG covariance failed")
+        print("Ensure you have a filed selected")
+
+def EEGBCI_generate_covariance_diagonal():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        noise_cov = mne.compute_raw_covariance(raw, method="diagonal_fixed")
+        fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
+    except:
+        print("EEG covariance failed")
+        print("Ensure you have a filed selected")
+
+def EEGBCI_generate_covariance_shrunk():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        raw = mne.io.read_raw_edf(file, preload=True)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        noise_cov = mne.compute_raw_covariance(raw, method="shrunk")
+        fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
+    except:
+        print("EEG covariance failed")
+        print("Ensure you have a filed selected")
+
+def EEGBCI_generate_covariance_diagonal_fixed():
+    #boilerplate start
+    #ensure the correct folder exists for mne
+    home_directory = os.path.expanduser( '~' )
+    home_directory = home_directory + '\mne_data'
+    print(home_directory)
+    if not os.path.exists(home_directory):
+        os.mkdir(home_directory)
+    
+    #Shows runs for testing
+    print(subject_label.text, " Subject")
+    print(runs_label.text, ' Runs')
+    
+    #regular expresions 
+    subject = re.findall(r'\d+', subject_label.text)
+    runs = re.findall(r'\d+', runs_label.text)
+    subject = int(subject[0])
+    runs = [int(i) for i in runs]
+    print(subject, " Subject")
+    print(runs, ' Runs')
+    raw_fnames = eegbci.load_data(subject, runs)
+    raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
+    #boilerplate end
+    try:
+        raw = mne.io.read_raw_edf(file, preload=True)
+        eegbci.standardize(raw)
+        montage = make_standard_montage("standard_1005")
+        raw.set_montage(montage)
+        raw = apply_filter(raw)
+        noise_cov = mne.compute_raw_covariance(raw, method="diagonal_fixed")
+        fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
+    except:
+        print("EEG covariance failed")
+        print("Ensure you have a filed selected")
+
 
 def test():
     process = Process(target=EEGBCI_raw_plot)
@@ -350,12 +661,15 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
                 ui.button('Process File', on_click=process_file)
                 ui.button('Raw Plot', on_click= raw_plot)
                 ui.button('Generate Montage Plot', on_click= generate_montage_plot)
-                ui.button('Generate Bar Graph', on_click=generate_Bar_Graph)
+                #ui.button('Generate Bar Graph', on_click=generate_Bar_Graph)
                 ui.button('Generate Topographic Map', on_click= generate_Topo_Map)
                 #This literally did nothing, so im commenting it out
                 #ui.button('Generate Heat Map')
                 ui.button('Generate ICA', on_click= generate_ICA)
-                ui.button('Generate Covariance chart', on_click= generate_covariance)
+                ui.button('Generate ICA Components', on_click= generate_ica_components)
+                ui.button('Generate ICA plot overlay', on_click= generate_ica_plot_overlay)
+                ui.button('Generate Covariance Chart Shrunk', on_click= generate_covariance_shrunk)
+                ui.button('Generate Covariance Chart Diagonal-Fixed', on_click= generate_covariance_diagonal_fixed)
             #
         #
         with ui.row():
@@ -375,27 +689,30 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
             ui.label('Sample Data from the MNE Library')
 
             
-        with ui.row():
+        with ui.row().classes('w-full justify-center m-3'):
             dataset = ui.toggle(['EEGBCI', 'Eyelink'], value=1)
-        with ui.row():
+        with ui.row().classes('w-full justify-center m-3'):
             ui.label(' ')
-        with ui.row().bind_visibility_from(dataset, 'value'):
+        with ui.row().classes('w-full justify-center m-3').bind_visibility_from(dataset, 'value'):
             ui.input('Subjects', placeholder='4',
                      on_change=lambda e:subject_label.set_text('Subjects selected: ' + e.value)
                      )
             subject_label = ui.label()
-        with ui.row().bind_visibility_from(dataset, 'value'):
+        with ui.row().classes('w-full justify-center m-3').bind_visibility_from(dataset, 'value'):
             ui.input('Runs', placeholder='1,2,3,4',
                      on_change=lambda e:runs_label.set_text('Runs selected: ' + e.value))
             runs_label = ui.label()
-        with ui.row().bind_visibility_from(dataset, 'value'):
+        with ui.row().classes('w-full justify-center m-3').bind_visibility_from(dataset, 'value'):
             ui.button('Raw Plot', on_click=EEGBCI_raw_plot)
             ui.button('Generate Montage Plot', on_click= EEGBCI_generate_montage_plot)
             #ui.button('Generate Bar Graph', on_click=EEGBCI_generate_Bar_Graph)
             ui.button('Generate Topographic Map', on_click= EEGBCI_generate_Topo_Map)
             #ui.button('Generate Heat Map')
-            #ui.button('Generate ICA', on_click=EEGBCI_generate_ICA)
-            #ui.button('Generate Covariance chart', on_click=EEGBCI_generate_covariance)
+            ui.button('Generate ICA', on_click= EEGBCI_generate_ICA)
+            ui.button('Generate ICA Components', on_click= EEGBCI_generate_ICA_components)
+            ui.button('Generate ICA Plot Overlay', on_click= EEGBCI_generate_ICA_plot_overlay)
+            ui.button('Generate Covariance Chart Shrunk', on_click=EEGBCI_generate_covariance_shrunk)
+            ui.button('Generate Covariance Chart Diagonal-Fixed', on_click=EEGBCI_generate_covariance_shrunk)
         #
     #
 #
