@@ -712,7 +712,7 @@ with ui.tab_panels(tabs, value='Local Files').classes('w-full'):
             ui.button('Generate ICA Components', on_click= EEGBCI_generate_ICA_components)
             ui.button('Generate ICA Plot Overlay', on_click= EEGBCI_generate_ICA_plot_overlay)
             ui.button('Generate Covariance Chart Shrunk', on_click=EEGBCI_generate_covariance_shrunk)
-            ui.button('Generate Covariance Chart Diagonal-Fixed', on_click=EEGBCI_generate_covariance_shrunk)
+            ui.button('Generate Covariance Chart Diagonal-Fixed', on_click=EEGBCI_generate_covariance_diagonal_fixed)
         #
     #
 #
