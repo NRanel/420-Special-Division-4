@@ -2,7 +2,7 @@ from nicegui import ui
 from nicegui import run
 from nicegui import events
 import mne
-import numpy as nppip
+import numpy as np
 import matplotlib.pyplot as plt
 from mne import Epochs, pick_types, events_from_annotations
 from mne.channels import make_standard_montage
@@ -93,15 +93,26 @@ def generate_montage_plot():
 ##Ica Generator Function
 def generate_ICA():
     try:
-        raw = mne.io.read_raw_edf(file, preload=True)
+        tmin, tmax = -1.0, 4.0
+        event_id = dict(hands=2, feet=3)
+        subject = 1
+        runs = [6, 10, 14]
+        raw_fnames = eegbci.load_data(subject, runs)
+        raw = concatenate_raws([read_raw_edf(f, preload=True) for f in raw_fnames])
         eegbci.standardize(raw)
         montage = make_standard_montage("standard_1005")
         raw.set_montage(montage)
-        raw = apply_filter(raw)
+        #raw = apply_filter(raw)
+        raw.filter(7.0, 30.0, fir_design="firwin", skip_by_annotation="edge")
+        events, _ = events_from_annotations(raw, event_id=dict(T1=2, T2=3))
+        picks = pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, exclude="bads")
         ica = mne.preprocessing.ICA(n_components=20, random_state=97, max_iter=800)
         ica.fit(raw)
         ica.exclude = [15]  # ICA components
         ica.plot_properties(raw, picks=ica.exclude)
+        
+        #noise_cov = mne.compute_raw_covariance(raw, method="shrunk")
+        #fig_noise_cov = mne.viz.plot_cov(noise_cov, raw.info, show_svd=False)
 
         mne.viz.plot_ica_sources(ica, raw)
         ica.plot_components()
